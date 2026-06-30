@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생애주기 경제생활 시뮬레이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .title-font {
+            font-family: 'Gowun Dodum', sans-serif;
+        }
+        .choice-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .choice-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
+        }
+        .stat-bar {
+            transition: width 0.8s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800">
+
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-md py-4 px-6 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg">
+                    <i class="fa-solid fa-chart-line text-2xl text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight title-font">생애주기 경제생활 시뮬레이션</h1>
+                    <p class="text-xs text-blue-100">[9사(일사)08-02] 중학교 3학년 사회</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full text-sm">
+                <span class="font-semibold text-yellow-300" id="current-stage-badge">대기 중</span>
+                <span class="text-xs text-slate-300">|</span>
+                <span class="text-slate-200" id="current-age-badge">시작 전</span>
+            </div>
+        </div>
+    </header>
+
+    <section id="stat-board" class="hidden bg-white border-b border-slate-200 shadow-sm sticky top-[72px] sm:top-[64px] z-40 py-3 px-4">
+        <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-emerald-50 rounded-xl p-2.5 border border-emerald-100 flex items-center gap-3">
+                <div class="bg-emerald-500 text-white p-2 rounded-lg text-lg flex items-center justify-center w-10 h-10 shrink-0">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+                <div class="overflow-hidden w-full">
+                    <div class="text-[11px] text-emerald-700 font-bold">순자산</div>
+                    <div class="text-base font-black text-emerald-800 truncate" id="stat-assets">0 만원</div>
+                </div>
+            </div>
+            <div class="bg-rose-50 rounded-xl p-2.5 border border-rose-100 flex flex-col justify-center">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[11px] text-rose-700 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-heartbeat text-rose-500"></i> 건강
+                    </span>
+                    <span class="text-xs font-bold text-rose-800" id="stat-health-val">100%</span>
+                </div>
+                <div class="w-full bg-rose-200 h-2 rounded-full overflow-hidden">
+                    <div id="stat-health-bar" class="bg-rose-500 h-full stat-bar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="bg-amber-50 rounded-xl p-2.5 border border-amber-100 flex flex-col justify-center">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[11px] text-amber-700 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-face-smile text-amber-500"></i> 행복
+                    </span>
+                    <span class="text-xs font-bold text-amber-800" id="stat-happy-val">100%</span>
+                </div>
+                <div class="w-full bg-amber-200 h-2 rounded-full overflow-hidden">
+                    <div id="stat-happy-bar" class="bg-amber-500 h-full stat-bar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="bg-indigo-50 rounded-xl p-2.5 border border-indigo-100 flex flex-col justify-center">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[11px] text-indigo-700 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-users text-indigo-500"></i> 사회적 관계
+                    </span>
+                    <span class="text-xs font-bold text-indigo-800" id="stat-social-val">100%</span>
+                </div>
+                <div class="w-full bg-indigo-200 h-2 rounded-full overflow-hidden">
+                    <div id="stat-social-bar" class="bg-indigo-500 h-full stat-bar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <section id="screen-intro" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
+            <div class="text-center max-w-2xl mx-auto">
+                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">교실 수업용 금융 보드 게임</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-4 mb-2 title-font">생애주기 경제생활 시뮬레이션</h2>
+                <p class="text-slate-600 text-sm sm:text-base mb-6 leading-relaxed">
+                    일생 동안 겪게 될 다양한 경제활동과 인생의 분기점들을 시뮬레이션합니다.<br>
+                    내가 설정한 인생 목표와 가치관에 따라 최선의 선택을 내리고, 자산 관리와 금융 설계를 수립해보세요!
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mb-8">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                        <div class="text-blue-600 font-bold text-lg mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye"></i> 1단계
+                        </div>
+                        <p class="text-xs text-slate-700 leading-normal">인생 목표를 2개 설정하고, 트레이드오프가 적용된 선천적 환경을 부여받습니다.</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                        <div class="text-indigo-600 font-bold text-lg mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-hourglass-half"></i> 2단계
+                        </div>
+                        <p class="text-xs text-slate-700 leading-normal">청소년기부터 노년기까지 생애주기별 필수 금융 상식과 경제적 딜레마를 선택합니다.</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                        <div class="text-violet-600 font-bold text-lg mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-robot"></i> 3단계
+                        </div>
+                        <p class="text-xs text-slate-700 leading-normal">최종 결과를 토대로 AI 종합 평가 리포트를 출력하여 학습 일지를 완성합니다.</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 mb-8 text-left text-sm text-amber-900 flex gap-3 items-start">
+                    <i class="fa-solid fa-lightbulb text-amber-500 text-lg mt-0.5"></i>
+                    <div>
+                        <strong class="font-bold">선생님의 꿀팁:</strong>
+                        자산만 무조건 높다고 이기는 게임이 아닙니다! 자산이 높으면 건강이나 행복이 낮게 시작할 수 있으니 균형 있는 선택이 필요합니다. 투자 시에는 주사위를 굴립니다!
+                    </div>
+                </div>
+
+                <button id="btn-start-game" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-lg py-4 px-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                    시뮬레이션 시작하기 <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="screen-setup" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
+            <div class="mb-6">
+                <span class="text-xs font-bold text-indigo-600 tracking-wide uppercase">0단계. 인생의 기초 설계</span>
+                <h3 class="text-2xl font-bold text-slate-900 mt-1">인생 목표 설정 및 환경 결정</h3>
+                <p class="text-slate-500 text-sm">일생 동안 당신이 추구하고 싶은 최고의 가치를 우선순위대로 2개 선택해주세요.</p>
+            </div>
+
+            <div class="mb-8">
+                <div class="text-sm font-bold text-slate-700 mb-3 flex justify-between">
+                    <span>원하는 목표 카드 2개를 순서대로 클릭하세요:</span>
+                    <span class="text-xs text-indigo-600" id="goal-selection-counter">선택된 개수: 0 / 2</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="goal-options-container"></div>
+
+                <div class="mt-6 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                    <div class="text-xs font-bold text-slate-500 mb-2">내가 설정한 가치관 우선순위:</div>
+                    <div class="flex flex-wrap gap-2" id="selected-goals-preview">
+                        <span class="text-sm text-slate-400 italic">아직 선택한 목표가 없습니다. 위의 카드를 선택해 주세요.</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100 my-6">
+
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="text-sm font-bold text-slate-700">나의 선천적 환경 생성 (스탯 균형 트레이드오프 적용)</div>
+                    <button id="btn-roll-background" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-xs py-1.5 px-3 rounded-lg transition-all">
+                        <i class="fa-solid fa-dice"></i> 환경 다시 정하기
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="background-cards-container"></div>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="btn-submit-setup" disabled class="w-full sm:w-auto bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-xl cursor-not-allowed transition-all">
+                    목표를 2개 선택해야 합니다
+                </button>
+            </div>
+        </section>
+
+        <section id="screen-gameplay" class="hidden">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <span id="gameplay-stage-title" class="text-xs font-bold text-blue-600 tracking-wide uppercase">청소년기</span>
+                        <h3 id="gameplay-event-title" class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">질문</h3>
+                    </div>
+                    <span id="gameplay-event-index" class="text-xs font-bold bg-slate-100 px-2.5 py-1 rounded-md text-slate-500">1 / 3</span>
+                </div>
+
+                <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100 mb-6 flex gap-4 items-start">
+                    <div class="bg-blue-100 text-blue-600 p-3.5 rounded-xl text-2xl shrink-0" id="gameplay-event-icon">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+                    <div>
+                        <p id="gameplay-event-desc" class="text-slate-600 text-sm sm:text-base leading-relaxed"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 mb-6" id="gameplay-choices-container"></div>
+
+                <div id="feedback-message-box" class="hidden p-4 rounded-2xl text-sm mb-4 transition-all flex gap-3 items-center">
+                    <div id="feedback-icon" class="text-xl"></div>
+                    <p id="feedback-text" class="font-medium text-slate-700"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-dice-event" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100 text-center">
+            <div class="max-w-md mx-auto">
+                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">주사위 찬스 이벤트!</span>
+                <h3 id="dice-event-title" class="text-2xl font-extrabold text-slate-900 mt-4 mb-2 title-font">결정</h3>
+                <p id="dice-event-desc" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left text-xs text-slate-600 mb-6 leading-relaxed">
+                    <div class="font-bold text-slate-700 mb-1.5 flex items-center gap-1.5 text-sm">
+                        <i class="fa-solid fa-circle-info text-blue-500"></i> 주사위 규칙
+                    </div>
+                    <ul class="space-y-1 list-disc pl-4" id="dice-rules-list"></ul>
+                </div>
+
+                <div class="my-8 flex justify-center items-center h-28">
+                    <div id="dice-cube" class="w-20 h-20 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg text-4xl font-black transition-all duration-300">
+                        <i class="fa-solid fa-dice-five"></i>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <button id="btn-roll-dice" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-lg py-4 rounded-xl shadow-md transition-all">
+                        주사위 굴리기 <i class="fa-solid fa-dice ml-1"></i>
+                    </button>
+                    <button id="btn-skip-dice" class="hidden text-sm text-slate-500 hover:text-slate-700 underline py-2">다음으로</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-result" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
+            <div class="text-center mb-8">
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">시뮬레이션 완료</span>
+                <h2 class="text-3xl font-extrabold text-slate-900 mt-4 mb-2 title-font">나의 생애주기 경제 리포트</h2>
+                <p class="text-slate-500 text-sm">일생 동안의 수많은 선택이 어떤 최종 결과를 도출해냈는지 분석합니다.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                    <div class="text-slate-400 text-xs font-semibold mb-1">최종 자산</div>
+                    <div class="text-xl font-bold text-emerald-600" id="result-assets">0 만원</div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                    <div class="text-slate-400 text-xs font-semibold mb-1">최종 건강</div>
+                    <div class="text-xl font-bold text-rose-600" id="result-health">0%</div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                    <div class="text-slate-400 text-xs font-semibold mb-1">최종 행복</div>
+                    <div class="text-xl font-bold text-amber-600" id="result-happy">0%</div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                    <div class="text-slate-400 text-xs font-semibold mb-1">최종 사회관계</div>
+                    <div class="text-xl font-bold text-indigo-600" id="result-social">0%</div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-6 mb-8">
+                <h3 class="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-500"></i> 생애 가치 성취도 평가
+                </h3>
+                <div class="text-slate-700 text-sm leading-relaxed mb-4" id="result-comprehensive-eval"></div>
+                <div class="bg-white rounded-2xl p-4 border border-blue-100 text-xs text-slate-600" id="result-target-matching"></div>
+            </div>
+
+            <div class="mb-8">
+                <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-timeline text-indigo-500"></i> 내 생애 타임라인 선택 기록
+                </h4>
+                <div class="relative pl-6 border-l-2 border-slate-200 space-y-6" id="result-timeline"></div>
+            </div>
+
+            <hr class="border-slate-100 my-6">
+
+            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-robot text-indigo-600"></i> AI 분석기 제출용 데이터 프롬프트
+                        </h4>
+                        <p class="text-xs text-slate-500">이 텍스트를 복사하여 ChatGPT 등에 질문하면 1:1 맞춤형 진단서를 받을 수 있습니다.</p>
+                    </div>
+                    <button id="btn-copy-prompt" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 transition-all w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-copy"></i> 복사하기
+                    </button>
+                </div>
+                <textarea id="ai-prompt-area" readonly class="w-full h-32 bg-slate-900 text-emerald-400 font-mono text-xs p-3.5 rounded-xl border border-slate-800 focus:outline-none"></textarea>
+            </div>
+
+            <div class="mt-8 flex justify-center">
+                <button id="btn-restart" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-8 rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i> 다시 도전하기
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-4 px-6 text-center text-xs border-t border-slate-800">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>© 2026 생애주기 금융 교육 시뮬레이터. All rights reserved.</p>
+            <p class="font-bold text-slate-300">Made by 주은민 선생님</p>
+        </div>
+    </footer>
+
+    <div id="toast-message" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white py-2.5 px-5 rounded-full text-xs font-semibold shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2">
+        <span id="toast-text">복사되었습니다.</span>
+    </div>
+
+    <script>
+        const gameState = {
+            stage: 'intro',
+            ageGroup: '시작 전',
+            currentAgeNum: 15,
+            stats: { assets: 0, health: 100, happy: 100, social: 100 },
+            goals: [],
+            background: { health: '', support: '', trait: '', healthReductionProbModifier: 0, startingAssetsModifier: 0, educationSupport: false },
+            history: [],
+            diceEvent: null,
+            currentEventIndex: 0,
+            hasInsurance: false,
+            isMarried: false,
+            hasChildren: false,
+            childInvested: 'none',
+            childType: null,
+            exerciseCount: 0
+        };
+
+        const goalData = [
+            { id: 'wealth', label: '부의 축적', icon: 'fa-coins', desc: '풍요로운 물질적 삶과 경제적 안정을 최우선' },
+            { id: 'health', label: '건강한 삶', icon: 'fa-heartbeat', desc: '일생 동안 활력 넘치고 질병 없는 신체 건강 최우선' },
+            { id: 'family', label: '행복한 가정', icon: 'fa-house-chimney-window', desc: '단란한 가정, 자녀와 배우자와의 끈끈한 유대 최우선' },
+            { id: 'fame', label: '직업적 성공', icon: 'fa-award', desc: '직업적 성취, 타인의 인정 및 자아실현 최우선' },
+            { id: 'freedom', label: '자유로운 삶', icon: 'fa-compass', desc: '얽매이지 않는 생활, 취미와 개인 여가 우선' },
+            { id: 'philanthropy', label: '사회적 기여', icon: 'fa-hand-holding-heart', desc: '타인을 돕고 기부하며 신용과 이웃 관계를 중시' }
+        ];
+
+        // [트레이드오프 밸런스 패치] 자산이 높으면 다른 스탯 페널티 부여
+        const backgroundPool = {
+            support: [
+                { title: '넉넉한 자산가형', icon: 'fa-wallet', desc: '시작 자산 +3,000만원 / 과도한 공부로 건강-40, 스트레스로 행복-45', effect: { startAssets: 3000, eduSupport: true, health: 60, happy: 55, social: 60 } },
+                { title: '평범하고 화목한 가정', icon: 'fa-house-user', desc: '시작 자산 +1,500만원 / 높은 지지 기반으로 건강·행복·관계 보너스', effect: { startAssets: 1500, eduSupport: false, health: 85, happy: 90, social: 85 } },
+                { title: '자수성가 건강형', icon: 'fa-dumbbell', desc: '시작 자산 +500만원 / 강인한 멘탈과 체력으로 정신·신체 스탯 극대화', effect: { startAssets: 500, eduSupport: false, health: 95, happy: 95, social: 75 } }
+            ],
+            health: [
+                { title: '체질 가중치: 활력 가득', icon: 'fa-bolt', desc: '초기 건강 +5, 행복 +5', effect: { health: 5, happy: 5 } },
+                { title: '체질 가중치: 무던한 신체', icon: 'fa-user', desc: '스탯 변동 없음', effect: { health: 0, happy: 0 } }
+            ],
+            trait: [
+                { title: '신중한 계획가', icon: 'fa-brain', desc: '사회적 관계 신뢰도 +5', effect: { social: 5 } },
+                { title: '즉흥적 모험가', icon: 'fa-wand-magic-sparkles', desc: '행복 +5, 관계 -5', effect: { happy: 5, social: -5 } }
+            ]
+        };
+
+        const eventStages = {
+            adolescence: {
+                title: "청소년기 (15~19세)",
+                events: [
+                    {
+                        title: "진로 및 학습에 대한 투자 방향",
+                        icon: "fa-school",
+                        desc: "고등학교 진학 후, 방과후 시간과 학원비를 어디에 집중 투자하시겠습니까?",
+                        choices: [
+                            { text: "인터넷 인강 및 독학 (가성비 추구)", desc: "저비용으로 알차게 공부합니다.", effect: { assets: 0, happy: -5, social: 10, health: 0 }, feedback: "학비를 아끼며 친구들과 스트레스를 풀어 사회적 관계가 상승했습니다." },
+                            { text: "고액 맞춤형 학원 및 컨설팅", desc: "성적 향상을 위해 과감하게 투자합니다.", effect: { assets: -500, happy: -10, social: -5, health: -5 }, feedback: "비용 부담은 크지만 성적 안정감이 생깁니다. (넉넉한 자산가는 일부 감면)", conditionalAssetCost: true },
+                            { text: "아르바이트 병행 및 실용 기술 습득", desc: "조기 소득 기회를 노립니다.", effect: { assets: 1000, happy: -10, social: 10, health: -10 }, feedback: "청년기 기초 자금은 모았으나 과도한 피로로 건강이 떨어집니다." }
+                        ]
+                    },
+                    {
+                        title: "첫 금융 지식: 청소년 전용 통장 개설",
+                        icon: "fa-wallet",
+                        desc: "은행에 방문하여 첫 통장을 만들려 합니다. 어떤 상품을 개설할까요?",
+                        choices: [
+                            { text: "자유입출금 통장 + 체크카드", desc: "원하는 소비를 수시로 하여 현재의 만족을 극대화합니다.", effect: { assets: -200, happy: 20, social: 10, health: 0 }, feedback: "소비의 즐거움을 알았으나 저축 습관이 잡히지 않아 자산이 샙니다." },
+                            { text: "소액 정기적금 (매달 강제 저축)", desc: "용돈을 아껴 목돈을 만듭니다.", effect: { assets: 1200, happy: -5, social: -5, health: 0 }, feedback: "지출을 참느라 힘들었지만 만기 이자와 함께 목돈을 쥐었습니다!" },
+                            { text: "모바일 주식형 펀드", desc: "공격적인 투자를 체험합니다.", effect: { diceTrigger: "teen_fund" }, feedback: "과연 펀드 투자가 어떤 결과를 부를까요?" }
+                        ]
+                    },
+                    {
+                        title: "여가 시간의 활용과 건강 관리",
+                        icon: "fa-running",
+                        desc: "체력을 기르고 우정을 다지기 위한 방안을 선택하세요.",
+                        choices: [
+                            { text: "꾸준한 운동 루틴 및 스포츠 클럽", desc: "체력을 든든히 다집니다.", effect: { assets: -100, happy: 10, social: 15, health: 20, exercise: 1 }, feedback: "탄탄한 체력은 인생을 버틸 든든한 밑거름이 됩니다." },
+                            { text: "PC방 친구 모임 및 모바일 게임 과금", desc: "게임과 취미에 몰두합니다.", effect: { assets: -200, happy: 25, social: 15, health: -15 }, feedback: "우정은 돈독해졌으나 거북목 증상과 과소비 패턴이 유발되었습니다." }
+                        ]
+                    }
+                ]
+            },
+            youth: {
+                title: "청년기 (20~35세)",
+                events: [
+                    {
+                        title: "독립 및 주거 계획 수립",
+                        icon: "fa-house",
+                        desc: "사회 초년생으로서 주거 형태를 선택해야 합니다.",
+                        choices: [
+                            { text: "가성비 원룸 월세", desc: "고정 비용을 최소화합니다.", effect: { assets: -400, happy: -5, social: 0, health: -5 }, feedback: "주거비는 아꼈으나 열악한 환경으로 삶의 만족도가 낮아집니다." },
+                            { text: "은행 신용대출을 활용한 전세 빌라", desc: "쾌적한 전셋집을 구합니다.", effect: { assets: -1500, happy: 15, social: 5, health: 5 }, feedback: "주거의 질은 좋아졌으나 다달이 갚아야 할 이자 상환 부담이 늘어납니다." },
+                            { text: "부모님 집에서 통근하기", desc: "주거 비용을 완전히 아낍니다.", effect: { assets: 0, happy: -10, social: -5, health: 5 }, feedback: "돈은 아꼈지만 매일 장거리 통근으로 지치고 잔소리 스트레스가 생깁니다.", conditionalAssetCost: true }
+                        ]
+                    },
+                    {
+                        title: "위험 관리: 보험 가입 결정",
+                        icon: "fa-shield-halved",
+                        desc: "미래의 사고를 대비하기 위한 실손 의료 보험 권유를 받았습니다.",
+                        choices: [
+                            { text: "실손의료비 종합보험 가입", desc: "예측하지 못한 질병을 관리합니다.", effect: { assets: -800, happy: -5, social: 0, health: 0, insurance: true }, feedback: "매달 보험료는 나가지만, 미래 노년기의 대형 의료비 지출을 철저히 방어합니다." },
+                            { text: "보험 대신 주식/코인 투자하기", desc: "현금을 쥐고 유동성을 확보하여 불립니다.", effect: { diceTrigger: "youth_crypto" }, feedback: "리스크 관리를 생략하고 즉각적인 대형 투자에 뛰어들었습니다." }
+                        ]
+                    },
+                    {
+                        title: "결혼 여부와 동반자 선택",
+                        icon: "fa-ring",
+                        desc: "가족 구성을 위한 중대한 분기점입니다.",
+                        choices: [
+                            { text: "결혼 및 자녀 계획 수립", desc: "가정의 행복을 최우선으로 합니다.", effect: { assets: -2500, happy: 25, social: 30, health: 5, married: true, hasChildren: true }, feedback: "초기 비용 부담은 크지만 정서적 안락과 유대감이 형성됩니다." },
+                            { text: "딩크(DINK)족 선언! 자녀 없이 맞벌이", desc: "부부 중심의 여유로운 재정을 고수합니다.", effect: { assets: -1500, happy: 25, social: 20, health: 5, married: true, hasChildren: false }, feedback: "양육비 걱정 없이 자산 관리가 유연하며, 저축력을 고수합니다." },
+                            { text: "화려한 비혼 라이프", desc: "오롯이 내 자산과 자아실현에 집중합니다.", effect: { assets: 800, happy: 15, social: -10, health: 5, married: false, hasChildren: false }, feedback: "지출 부담 없이 고정 자산을 온전히 보존했고 자유를 만끽합니다." }
+                        ]
+                    }
+                ]
+            },
+            middle: {
+                title: "중년기 (36~60세)",
+                events: [
+                    {
+                        title: "안정적 직장 수성 vs 창업 도전",
+                        icon: "fa-briefcase",
+                        desc: "새로운 소득원 확대를 위한 기회가 왔습니다.",
+                        choices: [
+                            { text: "직장에서 저축과 사내 복지 유지", desc: "큰 모험 대신 안정을 선택합니다.", effect: { assets: 5000, happy: 5, social: 10, health: -10 }, feedback: "큰 타격 없이 풍족한 소득을 꾸준히 쌓아 노후자금을 준비합니다." },
+                            { text: "나만의 프랜차이즈 창업", desc: "퇴직금과 대출을 걸고 승부수를 던집니다.", effect: { diceTrigger: "middle_startup" }, feedback: "창업 성공 여부는 과연 주사위 눈금에 따라 어떻게 결정될까요?" }
+                        ]
+                    },
+                    {
+                        title: "자녀 교육/여가 자금 배분",
+                        icon: "fa-baby",
+                        desc: "인생의 가치에 따라 모인 여유 자금을 배분해야 합니다.",
+                        condition: "married_with_child",
+                        choices: [
+                            { text: "자녀와 정서적 성장 지원 (가족 여행/예체능)", desc: "유대감을 최우선으로 합니다.", effect: { assets: -1500, happy: 25, social: 25, health: -5, childInvested: 'emotional' }, feedback: "합리적 양육비를 사용했습니다. 노년기에 아이는 부모의 따뜻한 후원자가 됩니다." },
+                            { text: "학군지 이동 및 고액 사교육 코스 완주", desc: "학업적 성공에 올인합니다.", effect: { assets: -4500, happy: -10, social: 10, health: -15, childInvested: 'money' }, feedback: "허리가 휘는 부담이지만, 훗날 자녀가 전문직으로 성공하여 보답할 확률이 생깁니다." }
+                        ]
+                    },
+                    {
+                        title: "딩크 부부의 시너지 자금 배분",
+                        icon: "fa-arrows-to-dot",
+                        desc: "자녀 교육비가 들지 않아 모인 여유 자금을 어떻게 쓰시겠습니까?",
+                        condition: "dink",
+                        choices: [
+                            { text: "부부 노후 연금 자산 올인", desc: "안정적인 후반전을 준비합니다.", effect: { assets: 3500, happy: 15, social: 10, health: 5 }, feedback: "확실한 부부 노후 연금 방어벽을 구축했습니다." },
+                            { text: "세계 크루즈 여행 및 문화 생활 과금", desc: "현재의 행복을 최고의 가치로 삼습니다.", effect: { assets: -500, happy: 35, social: 15, health: 10 }, feedback: "매 순간 최고의 경험 자산을 쌓으며 부부의 유대를 돈독히 했습니다." }
+                        ]
+                    },
+                    {
+                        title: "싱글 라이프의 재테크 확장",
+                        icon: "fa-gem",
+                        desc: "싱글로서 모은 여유 자금과 에너지를 어디에 활용하시겠습니까?",
+                        condition: "single",
+                        choices: [
+                            { text: "해외 장기 여행 및 자기계발 투자", desc: "내 삶의 철학을 가꿉니다.", effect: { assets: -1000, happy: 35, social: 10, health: 10 }, feedback: "높은 자아 성찰과 건강한 신체를 얻어 웰빙 라이프를 구사합니다." },
+                            { text: "부동산 부동산 갭투자 도전", desc: "자산 증식에 올인합니다.", effect: { diceTrigger: "middle_realestate" }, feedback: "부동산 시장의 신호가 인생 후반전 자산을 크게 좌우합니다." }
+                        ]
+                    },
+                    {
+                        title: "체력의 경고등: 건강 및 식단 관리",
+                        icon: "fa-weight-scale",
+                        desc: "건강검진에서 성인병 초기 경고를 받았습니다.",
+                        choices: [
+                            { text: "비싼 헬스 PT와 프리미엄 유기농 식단", desc: "건강 회복에 적극 투자합니다.", effect: { assets: -500, happy: 10, social: 5, health: 25, exercise: 1 }, feedback: "체력이 비약적으로 회복되며 중년의 고비를 기쁘게 넘깁니다." },
+                            { text: "가벼운 걷기 운동과 영양제로 타협", desc: "최소한의 방어선만 구축합니다.", effect: { assets: -100, happy: -5, social: 0, health: -10 }, feedback: "비용은 덜 들었으나 부족한 신체 활동으로 노년기 질환 확률이 늘어납니다." }
+                        ]
+                    }
+                ]
+            },
+            elderly: {
+                title: "노년기 (61세~)",
+                events: [
+                    {
+                        title: "은퇴 후 노후 자산 운용 방안",
+                        icon: "fa-piggy-bank",
+                        desc: "현역에서 물러난 후 보유 자산을 어떻게 운용하시겠습니까?",
+                        choices: [
+                            { text: "안정적인 주택연금 및 연금신탁 전환", desc: "평생 고정 연금으로 수령합니다.", effect: { assets: 1500, happy: 10, social: 5, health: 0 }, feedback: "매달 정기 소득이 보장되면서 노후 생활에 큰 정서적 평화를 얻었습니다." },
+                            { text: "고수익 배당 상가 분양 투자 유혹", desc: "월세 수익을 노리고 올인합니다.", effect: { diceTrigger: "elderly_investment" }, feedback: "과연 안전한 선택이었을지 주사위 결과를 기다립니다." }
+                        ]
+                    },
+                    {
+                        title: "건강 이상: 종합 치료 비용 지출",
+                        icon: "fa-hospital-user",
+                        desc: "노화에 따른 종합적인 정밀 치료와 수술이 필요한 시점입니다.",
+                        choices: [
+                            { text: "적극적인 병원 입원 및 집중 치료 수용", desc: "치료비를 지불하고 건강 스탯을 방어합니다.", effect: { healthTrigger: true }, feedback: "가입해 둔 실손 보험 유무와 운동 횟수에 따라 최종 비용이 다르게 계산됩니다." }
+                        ]
+                    },
+                    {
+                        title: "제2의 인생 여가 활동",
+                        icon: "fa-mug-hot",
+                        desc: "인생 후반전, 자아실현을 위해 어떤 노후를 보내시겠습니까?",
+                        choices: [
+                            { text: "로컬 실버 커뮤니티 동아리 및 봉사 활동", desc: "폭넓은 인간관계와 사회적 연대를 이어갑니다.", effect: { assets: -200, happy: 25, social: 30, health: 5 }, feedback: "동료들과 소통하며 외롭지 않고 활기찬 최고의 노년을 보냅니다." },
+                            { text: "조용한 근교 주말 텃밭 가꾸기", desc: "자연 친화적인 가치와 마음의 평화를 취합니다.", effect: { assets: -50, happy: 20, social: 10, health: 25 }, feedback: "신선한 무공해 채소를 직접 기르며 신체 건강이 비약적으로 좋아집니다." }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        const diceEvents = {
+            teen_fund: {
+                title: "청소년 주식 펀드 결과",
+                desc: "공격적인 펀드 결과는 시장의 눈금에 달렸습니다.",
+                rules: [
+                    "5 또는 6: 대박! 테마 펀드 급등 (자산 +800만원, 행복 +15)",
+                    "3 또는 4: 중박! 보합세 유지 (자산 +200만원)",
+                    "1 또는 2: 쪽박! 반토막 손실 (자산 -400만원, 행복 -10)"
+                ],
+                roll: function(num) {
+                    if (num >= 5) return { text: "AI 혁명 붐으로 수익률 폭발! 800만원 이익 달성!", stats: { assets: 800, happy: 15, social: 0, health: 0 } };
+                    else if (num >= 3) return { text: "시장이 보합세를 유지하며 200만원 가벼운 이익 환수.", stats: { assets: 200, happy: 0, social: 0, health: 0 } };
+                    else return { text: "버블 붕괴로 반토막이 났습니다. 400만원 손실.", stats: { assets: -400, happy: -10, social: 0, health: -10 } };
+                }
+            },
+            youth_crypto: {
+                title: "청년기 레버리지 암호화폐 투자",
+                desc: "변동성이 어마어마한 시장에 진입했습니다.",
+                rules: [
+                    "5 또는 6: 대호황! 자산 3배 점프 (자산 +4,000만원, 행복 +20)",
+                    "3 또는 4: 보합! 원금 유지, 수면 부족 (자산 0원, 건강 -10)",
+                    "1 또는 2: 대폭락! 상장 폐지 및 원금 손실 (자산 -2,000만원, 행복 -25)"
+                ],
+                roll: function(num) {
+                    if (num >= 5) return { text: "차트 수직 상승! 4,000만원 자금 확보 성공!", stats: { assets: 4000, happy: 20, social: 0, health: 0 } };
+                    else if (num >= 3) return { text: "원금 제자리걸음. 밤새 차트 보느라 건강만 상했습니다.", stats: { assets: 0, happy: 0, social: 0, health: -10 } };
+                    else return { text: "코인이 상장폐지되었습니다. -2,000만원 대타격!", stats: { assets: -2000, happy: -25, social: 0, health: -5 } };
+                }
+            },
+            middle_startup: {
+                title: "중년기 자영업 창업 성공 여부",
+                desc: "퇴직금을 던지고 시작한 요식업 프랜차이즈, 상권의 운명은?",
+                rules: [
+                    "5 또는 6: 대박 맛집 등극! 마케팅 대흥행 (자산 +8,000만원, 행복 +20)",
+                    "3 또는 4: 평범한 매출. 현상 유지노동 과다 (자산 +1,500만원, 건강 -15)",
+                    "1 또는 2: 경영 실패. 부채 부담 발생 (자산 -5,000만원, 행복 -30)"
+                ],
+                roll: function(num) {
+                    if (num >= 5) return { text: "인플루언서 핫플 등극! 8,000만원 순소득 증가!", stats: { assets: 8000, happy: 20, social: 15, health: -5 } };
+                    else if (num >= 3) return { text: "적자는 면했으나 주6일 노동으로 체력이 상합니다. 1,500만원 확보.", stats: { assets: 1500, happy: -5, social: 5, health: -15 } };
+                    else return { text: "임대료를 까먹고 폐업했습니다. -5,000만원의 큰 부채 획득.", stats: { assets: -5000, happy: -30, social: -10, health: -10 } };
+                }
+            },
+            middle_realestate: {
+                title: "중년기 부동산 갭투자 결과",
+                desc: "아파트 및 토지 투자의 호재 확률을 계산합니다.",
+                rules: [
+                    "5 또는 6: 신도시 개발 확정 및 대폭등! (자산 +7,000만원, 행복 +15)",
+                    "3 또는 4: 인플레 헤지 수준 완만한 상승 (자산 +1,500만원)",
+                    "1 또는 2: 역전세난 발생 및 규제 타격 (자산 -3,000만원, 관계 -10)"
+                ],
+                roll: function(num) {
+                    if (num >= 5) return { text: "교통 호재로 집값이 폭등했습니다! 7,000만원 차익 실현!", stats: { assets: 7000, happy: 15, social: 0, health: 0 } };
+                    else if (num >= 3) return { text: "완만한 상향세로 1,500만원 소액 이득 취득.", stats: { assets: 1500, happy: 5, social: 0, health: 0 } };
+                    else return { text: "역전세난으로 보증금을 돌려주느라 급매 손해를 보았습니다. -3,000만원.", stats: { assets: -3000, happy: -15, social: -10, health: 0 } };
+                }
+            },
+            elderly_investment: {
+                title: "노년기 상가 분양 투자 결과",
+                desc: "은퇴 자금을 지키기 위한 마지막 월세 파이프라인의 명암은?",
+                rules: [
+                    "5 또는 6: 우수 브랜드 장기 임차 완료! (자산 +5,000만원, 행복 +20)",
+                    "3 또는 4: 주변 공급 과잉으로 공실 다소 발생 (자산 +1,000만원)",
+                    "1 또는 2: 기획부동산 사기 전락 (자산 -4,500만원, 행복 -35)"
+                ],
+                roll: function(num) {
+                    if (num >= 5) return { text: "대형 브랜드 유치 성공! 상가 가치 급증 및 5,000만원 확보!", stats: { assets: 5000, happy: 20, social: 5, health: 0 } };
+                    else if (num >= 3) return { text: "일부 공실이 있지만 가볍게 월세를 누립니다. 1,000만원 확보.", stats: { assets: 1000, happy: 5, social: 0, health: 0 } };
+                    else return { text: "유령 빌딩 분양 사기에 말려 은퇴 자금 4,500만원을 날렸습니다.", stats: { assets: -4500, happy: -35, social: -15, health: -10 } };
+                }
+            }
+        };
+
+        const childTypes = [
+            { name: "장학생 효도형 자녀", desc: "자기 주도 학습력이 뛰어나 사교육비가 들지 않습니다.", costModifier: -1500, happyBonus: 20, icon: "fa-graduation-cap" },
+            { name: "말썽쟁이 사고뭉치 자녀", desc: "잦은 기물 파손과 대인 합의금으로 부모의 재정을 축냅니다.", costModifier: 2000, happyBonus: -20, icon: "fa-user-ninja" },
+            { name: "평범하고 든든한 무던형 자녀", desc: "큰 사고 없이 자기 역할을 해내는 대한민국 표준 자녀입니다.", costModifier: 0, happyBonus: 10, icon: "fa-child" }
+        ];
+
+        const screens = {
+            intro: document.getElementById('screen-intro'),
+            setup: document.getElementById('screen-setup'),
+            gameplay: document.getElementById('screen-gameplay'),
+            dice: document.getElementById('screen-dice-event'),
+            result: document.getElementById('screen-result')
+        };
+
+        const elements = {
+            statBoard: document.getElementById('stat-board'),
+            badgeStage: document.getElementById('current-stage-badge'),
+            badgeAge: document.getElementById('current-age-badge'),
+            statAssets: document.getElementById('stat-assets'),
+            statHealthVal: document.getElementById('stat-health-val'),
+            statHealthBar: document.getElementById('stat-health-bar'),
+            statHappyVal: document.getElementById('stat-happy-val'),
+            statHappyBar: document.getElementById('stat-happy-bar'),
+            statSocialVal: document.getElementById('stat-social-val'),
+            statSocialBar: document.getElementById('stat-social-bar'),
+            btnStartGame: document.getElementById('btn-start-game'),
+            goalOptionsContainer: document.getElementById('goal-options-container'),
+            selectedGoalsPreview: document.getElementById('selected-goals-preview'),
+            goalCounter: document.getElementById('goal-selection-counter'),
+            backgroundCardsContainer: document.getElementById('background-cards-container'),
+            btnRollBackground: document.getElementById('btn-roll-background'),
+            btnSubmitSetup: document.getElementById('btn-submit-setup'),
+            gameplayStageTitle: document.getElementById('gameplay-stage-title'),
+            gameplayEventTitle: document.getElementById('gameplay-event-title'),
+            gameplayEventIndex: document.getElementById('gameplay-event-index'),
+            gameplayEventIcon: document.getElementById('gameplay-event-icon'),
+            gameplayEventDesc: document.getElementById('gameplay-event-desc'),
+            gameplayChoicesContainer: document.getElementById('gameplay-choices-container'),
+            feedbackMessageBox: document.getElementById('feedback-message-box'),
+            feedbackIcon: document.getElementById('feedback-icon'),
+            feedbackText: document.getElementById('feedback-text'),
+            diceEventTitle: document.getElementById('dice-event-title'),
+            diceEventDesc: document.getElementById('dice-event-desc'),
+            diceRulesList: document.getElementById('dice-rules-list'),
+            diceCube: document.getElementById('dice-cube'),
+            btnRollDice: document.getElementById('btn-roll-dice'),
+            btnSkipDice: document.getElementById('btn-skip-dice'),
+            resultAssets: document.getElementById('result-assets'),
+            resultHealth: document.getElementById('result-health'),
+            resultHappy: document.getElementById('result-happy'),
+            resultSocial: document.getElementById('result-social'),
+            resultEvalText: document.getElementById('result-comprehensive-eval'),
+            resultTargetMatching: document.getElementById('result-target-matching'),
+            resultTimeline: document.getElementById('result-timeline'),
+            aiPromptArea: document.getElementById('ai-prompt-area'),
+            btnCopyPrompt: document.getElementById('btn-copy-prompt'),
+            btnRestart: document.getElementById('btn-restart'),
+            toast: document.getElementById('toast-message'),
+            toastText: document.getElementById('toast-text')
+        };
+
+        function showScreen(screenKey) {
+            Object.keys(screens).forEach(key => {
+                if (key === screenKey) screens[key].classList.remove('hidden');
+                else screens[key].classList.add('hidden');
+            });
+            gameState.stage = screenKey;
+            if (screenKey === 'intro' || screenKey === 'result') elements.statBoard.classList.add('hidden');
+            else elements.statBoard.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(msg, isSuccess = true) {
+            elements.toastText.textContent = msg;
+            elements.toast.classList.remove('opacity-0', 'pointer-events-none');
+            elements.toast.classList.add('opacity-100');
+            setTimeout(() => {
+                elements.toast.classList.remove('opacity-100');
+                elements.toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        function updateStatUI() {
+            elements.statAssets.innerText = `${(gameState.stats.assets).toLocaleString('ko-KR')} 만원`;
+            const healthClamped = Math.max(0, Math.min(100, gameState.stats.health));
+            const happyClamped = Math.max(0, Math.min(100, gameState.stats.happy));
+            const socialClamped = Math.max(0, Math.min(100, gameState.stats.social));
+
+            elements.statHealthVal.innerText = `${healthClamped}%`;
+            elements.statHealthBar.style.width = `${healthClamped}%`;
+            elements.statHappyVal.innerText = `${happyClamped}%`;
+            elements.statHappyBar.style.width = `${happyClamped}%`;
+            elements.statSocialVal.innerText = `${socialClamped}%`;
+            elements.statSocialBar.style.width = `${socialClamped}%`;
+
+            elements.badgeStage.innerText = getStageBadgeText();
+            elements.badgeAge.innerText = `${gameState.currentAgeNum}세`;
+        }
+
+        function getStageBadgeText() {
+            switch(gameState.ageGroup) {
+                case '청소년기': return '청소년기 🎒';
+                case '청년기': return '청년기 💼';
+                case '중년기': return '중년기 🏠';
+                case '노년기': return '노년기 🍵';
+                default: return '준비 단계';
+            }
+        }
+
+        function changeStats(changes) {
+            if (changes.assets) gameState.stats.assets += changes.assets;
+            if (changes.health) gameState.stats.health = Math.max(0, Math.min(100, gameState.stats.health + changes.health));
+            if (changes.happy) gameState.stats.happy = Math.max(0, Math.min(100, gameState.stats.happy + changes.happy));
+            if (changes.social) gameState.stats.social = Math.max(0, Math.min(100, gameState.stats.social + changes.social));
+            updateStatUI();
+        }
+
+        function initSetupScreen() {
+            elements.goalOptionsContainer.innerHTML = '';
+            goalData.forEach(goal => {
+                const card = document.createElement('div');
+                card.className = `choice-card bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 cursor-pointer text-center flex flex-col items-center gap-2 transition-all`;
+                card.dataset.id = goal.id;
+                card.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-xl text-slate-600 goal-icon">
+                        <i class="fa-solid ${goal.icon}"></i>
+                    </div>
+                    <div class="font-bold text-slate-800 text-sm">${goal.label}</div>
+                    <div class="text-[10px] text-slate-500 leading-tight">${goal.desc}</div>
+                `;
+                card.addEventListener('click', () => toggleGoal(goal));
+                elements.goalOptionsContainer.appendChild(card);
+            });
+
+            rollBackground();
+            gameState.goals = [];
+            renderSelectedGoals();
+        }
+
+        function toggleGoal(goal) {
+            const index = gameState.goals.findIndex(g => g.id === goal.id);
+            if (index > -1) gameState.goals.splice(index, 1);
+            else {
+                if (gameState.goals.length >= 2) {
+                    showToast("목표는 최대 2개까지 선택할 수 있습니다.");
+                    return;
+                }
+                gameState.goals.push(goal);
+            }
+            renderSelectedGoals();
+            updateGoalCardStyles();
+        }
+
+        function updateGoalCardStyles() {
+            const cards = elements.goalOptionsContainer.querySelectorAll('[data-id]');
+            cards.forEach(card => {
+                const goalId = card.dataset.id;
+                const index = gameState.goals.findIndex(g => g.id === goalId);
+                const iconDiv = card.querySelector('.goal-icon');
+                
+                if (index > -1) {
+                    card.classList.remove('border-slate-200', 'bg-slate-50');
+                    card.classList.add('border-indigo-600', 'bg-indigo-50/50');
+                    iconDiv.classList.remove('bg-slate-100', 'text-slate-600');
+                    iconDiv.classList.add('bg-indigo-600', 'text-white');
+                    
+                    let badge = card.querySelector('.priority-badge');
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'priority-badge absolute top-2 right-2 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center';
+                        card.style.position = 'relative';
+                        card.appendChild(badge);
+                    }
+                    badge.innerText = index + 1;
+                } else {
+                    card.classList.remove('border-indigo-600', 'bg-indigo-50/50');
+                    card.classList.add('border-slate-200', 'bg-slate-50');
+                    iconDiv.classList.remove('bg-indigo-600', 'text-white');
+                    iconDiv.classList.add('bg-slate-100', 'text-slate-600');
+                    
+                    const badge = card.querySelector('.priority-badge');
+                    if (badge) badge.remove();
+                }
+            });
+        }
+
+        function renderSelectedGoals() {
+            elements.selectedGoalsPreview.innerHTML = '';
+            elements.goalCounter.innerText = `선택된 개수: ${gameState.goals.length} / 2`;
+
+            if (gameState.goals.length === 0) {
+                elements.selectedGoalsPreview.innerHTML = `<span class="text-sm text-slate-400 italic">아직 선택한 목표가 없습니다.</span>`;
+                elements.btnSubmitSetup.disabled = true;
+                elements.btnSubmitSetup.className = "w-full sm:w-auto bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-xl cursor-not-allowed";
+                elements.btnSubmitSetup.innerText = "목표를 2개 선택해야 합니다";
+                return;
+            }
+
+            gameState.goals.forEach((goal, idx) => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-indigo-600 text-white py-1.5 px-4 rounded-full text-xs font-bold flex items-center gap-1.5';
+                tag.innerHTML = `
+                    <span class="bg-white text-indigo-700 w-4 h-4 rounded-full inline-flex items-center justify-center text-[10px] font-black">${idx + 1}</span>
+                    <i class="fa-solid ${goal.icon}"></i> ${goal.label}
+                `;
+                elements.selectedGoalsPreview.appendChild(tag);
+            });
+
+            if (gameState.goals.length === 2) {
+                elements.btnSubmitSetup.disabled = false;
+                elements.btnSubmitSetup.className = "w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 px-10 rounded-xl shadow-md cursor-pointer transition-all";
+                elements.btnSubmitSetup.innerText = "인생 시뮬레이션 시작하기!";
+            } else {
+                elements.btnSubmitSetup.disabled = true;
+                elements.btnSubmitSetup.className = "w-full sm:w-auto bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-xl cursor-not-allowed";
+                elements.btnSubmitSetup.innerText = `목표를 더 선택하세요 (${gameState.goals.length}/2)`;
+            }
+        }
+
+        // [트레이드오프 연산 핵심 렌더러]
+        function rollBackground() {
+            const sIdx = Math.floor(Math.random() * backgroundPool.support.length);
+            const hIdx = Math.floor(Math.random() * backgroundPool.health.length);
+            const tIdx = Math.floor(Math.random() * backgroundPool.trait.length);
+
+            const rSupport = backgroundPool.support[sIdx];
+            const rHealth = backgroundPool.health[hIdx];
+            const rTrait = backgroundPool.trait[tIdx];
+
+            gameState.background.support = rSupport.title;
+            gameState.background.health = rHealth.title;
+            gameState.background.trait = rTrait.title;
+            gameState.background.educationSupport = rSupport.eduSupport;
+
+            // 베이스 트레이드 오프 연산 반영
+            gameState.stats.assets = rSupport.effect.startAssets;
+            gameState.stats.health = rSupport.effect.health + rHealth.effect.health;
+            gameState.stats.happy = rSupport.effect.happy + rHealth.effect.happy + (rTrait.effect.happy || 0);
+            gameState.stats.social = rSupport.effect.social + (rTrait.effect.social || 0);
+
+            elements.backgroundCardsContainer.innerHTML = `
+                <div class="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-4 flex gap-3 items-center">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid ${rSupport.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-emerald-500">경제적 가정 환경</div>
+                        <div class="text-sm font-black text-slate-800">${rSupport.title}</div>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${rSupport.desc}</p>
+                    </div>
+                </div>
+                <div class="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 flex gap-3 items-center">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid ${rHealth.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-indigo-500">신체 체질 가중치</div>
+                        <div class="text-sm font-black text-slate-800">${rHealth.title}</div>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${rHealth.desc}</p>
+                    </div>
+                </div>
+                <div class="bg-amber-50/40 border border-amber-100 rounded-2xl p-4 flex gap-3 items-center">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid ${rTrait.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-amber-500">성향적 기질</div>
+                        <div class="text-sm font-black text-slate-800">${rTrait.title}</div>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${rTrait.desc}</p>
+                    </div>
+                </div>
+            `;
+            updateStatUI();
+        }
+
+        let currentSequence = [];
+        
+        function buildEventSequence() {
+            currentSequence = [];
+            eventStages.adolescence.events.forEach(e => currentSequence.push({ ageGroup: '청소년기', ageNum: 17, ...e }));
+            eventStages.youth.events.forEach(e => currentSequence.push({ ageGroup: '청년기', ageNum: 27, ...e }));
+            eventStages.middle.events.forEach(e => {
+                if (e.condition === 'married_with_child') currentSequence.push({ ageGroup: '중년기', ageNum: 45, ...e, conditionalShow: 'married_with_child' });
+                else if (e.condition === 'dink') currentSequence.push({ ageGroup: '중년기', ageNum: 45, ...e, conditionalShow: 'dink' });
+                else if (e.condition === 'single') currentSequence.push({ ageGroup: '중년기', ageNum: 45, ...e, conditionalShow: 'single' });
+                else currentSequence.push({ ageGroup: '중년기', ageNum: 45, ...e });
+            });
+            eventStages.elderly.events.forEach(e => currentSequence.push({ ageGroup: '노년기', ageNum: 68, ...e }));
+            gameState.currentEventIndex = 0;
+        }
+
+        function proceedToNextEvent() {
+            while (gameState.currentEventIndex < currentSequence.length) {
+                const ev = currentSequence[gameState.currentEventIndex];
+                if (ev.conditionalShow) {
+                    if (ev.conditionalShow === 'married_with_child' && (!gameState.isMarried || !gameState.hasChildren)) { gameState.currentEventIndex++; continue; }
+                    if (ev.conditionalShow === 'dink' && (!gameState.isMarried || gameState.hasChildren)) { gameState.currentEventIndex++; continue; }
+                    if (ev.conditionalShow === 'single' && gameState.isMarried) { gameState.currentEventIndex++; continue; }
+                }
+                break;
+            }
+
+            if (gameState.currentEventIndex >= currentSequence.length) {
+                gameState.ageGroup = '결과';
+                gameState.currentAgeNum = 85;
+                updateStatUI();
+                renderFinalResults();
+                return;
+            }
+
+            const currentEvent = currentSequence[gameState.currentEventIndex];
+            
+            if (gameState.ageGroup !== currentEvent.ageGroup) {
+                const oldGroup = gameState.ageGroup;
+                gameState.ageGroup = currentEvent.ageGroup;
+                gameState.currentAgeNum = currentEvent.ageNum;
+                if (oldGroup !== '시작 전') {
+                    triggerStageSalary(currentEvent.ageGroup);
+                    return;
+                }
+            }
+
+            gameState.ageGroup = currentEvent.ageGroup;
+            gameState.currentAgeNum = currentEvent.ageNum;
+            updateStatUI();
+
+            elements.feedbackMessageBox.classList.add('hidden');
+            elements.gameplayStageTitle.innerText = `${currentEvent.ageGroup} (${currentEvent.ageNum}세)`;
+            elements.gameplayEventTitle.innerText = currentEvent.title;
+            elements.gameplayEventIndex.innerText = `${gameState.currentEventIndex + 1} / ${currentSequence.length}`;
+            elements.gameplayEventDesc.innerText = currentEvent.desc;
+            elements.gameplayEventIcon.innerHTML = `<i class="fa-solid ${currentEvent.icon}"></i>`;
+
+            elements.gameplayChoicesContainer.innerHTML = '';
+            currentEvent.choices.forEach((choice, index) => {
+                const choiceCard = document.createElement('button');
+                choiceCard.className = "choice-card w-full text-left bg-white border border-slate-200 hover:border-blue-500 rounded-2xl p-4 flex justify-between items-center transition-all group";
+                
+                let costDetail = "";
+                if (choice.effect && choice.effect.assets) {
+                    const color = choice.effect.assets > 0 ? 'text-emerald-600' : 'text-rose-600';
+                    const sign = choice.effect.assets > 0 ? '+' : '';
+                    costDetail = `<span class="text-xs font-bold ${color} ml-1">${sign}${choice.effect.assets.toLocaleString()}만원</span>`;
+                }
+
+                choiceCard.innerHTML = `
+                    <div class="flex-grow pr-4">
+                        <div class="font-extrabold text-slate-800 text-sm sm:text-base group-hover:text-blue-600 flex items-center gap-1.5">
+                            <span class="bg-slate-100 text-slate-700 w-5 h-5 rounded-full inline-flex items-center justify-center text-xs font-bold shrink-0">${index+1}</span>
+                            ${choice.text}
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1 pl-6 leading-relaxed">${choice.desc}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        ${costDetail}
+                        <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-blue-500"></i>
+                    </div>
+                `;
+                
+                choiceCard.addEventListener('click', () => handleChoiceSelection(choice, currentEvent));
+                elements.gameplayChoicesContainer.appendChild(choiceCard);
+            });
+
+            showScreen('gameplay');
+        }
+
+        function triggerStageSalary(newStage) {
+            let salaryAmount = 0;
+            let introText = "";
+            let iconClass = "fa-briefcase";
+
+            if (newStage === '청년기') {
+                salaryAmount = 3000;
+                introText = `💼 <strong>청년기 첫 취업 정산!</strong> 고정 소득 및 정착 지원금으로 <strong>+${salaryAmount}만원</strong>이 계좌에 입금되었습니다.`;
+            } else if (newStage === '중년기') {
+                if (gameState.isMarried && !gameState.hasChildren) {
+                    salaryAmount = 8000;
+                    introText = `💸 <strong>딩크 부부 맞벌이 효과!</strong> 고정 소득 <strong>+${salaryAmount}만원</strong>이 공동 통장에 충전됩니다.`;
+                } else {
+                    salaryAmount = 5000;
+                    introText = `🏢 <strong>중년기 경력 소득 정산!</strong> 안정적 진급 수당 및 정기 수입 <strong>+${salaryAmount}만원</strong>이 가산되었습니다.`;
+                }
+            } else if (newStage === '노년기') {
+                salaryAmount = 2500;
+                introText = `🍵 <strong>노년기 은퇴 연금 정산!</strong> 명예로운 퇴직금 보장으로 <strong>+${stageSalary = 2500}만원</strong>이 추가되었습니다.`;
+                
+                if (gameState.isMarried && gameState.hasChildren) {
+                    let childPayback = gameState.childInvested === 'money' ? 5000 : 3000;
+                    salaryAmount += childPayback;
+                    introText += `<br><br>❤️ <strong>자녀 투자에 대한 보답:</strong> 과거에 헌신한 양육 방식에 감사해하며 자녀가 노후 보조 소득 <strong>+${childPayback}만원</strong>을 보냈습니다.`;
+                    gameState.stats.happy = Math.min(100, gameState.stats.happy + 20);
+                }
+            }
+
+            gameState.stats.assets += salaryAmount;
+            updateStatUI();
+
+            elements.gameplayStageTitle.innerText = `${newStage} 시작 정산`;
+            elements.gameplayEventTitle.innerText = "라이프 스테이지 정기 소득 보고서";
+            elements.gameplayEventIndex.innerText = "Salary Up!";
+            elements.gameplayEventIcon.innerHTML = `<i class="fa-solid ${iconClass} text-yellow-500"></i>`;
+            elements.gameplayEventDesc.innerHTML = introText;
+            elements.gameplayChoicesContainer.innerHTML = '';
+            
+            const nextStageBtn = document.createElement('button');
+            nextStageBtn.className = "w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl text-center shadow-md";
+            nextStageBtn.innerHTML = `확인하고 다음 주기 설계로 가기 <i class="fa-solid fa-arrow-right"></i>`;
+            nextStageBtn.addEventListener('click', () => proceedToNextEvent());
+            elements.gameplayChoicesContainer.appendChild(nextStageBtn);
+        }
+
+        function handleChoiceSelection(choice, currentEvent) {
+            let actualAssetsChange = 0;
+            if (choice.effect && choice.effect.assets) {
+                actualAssetsChange = choice.effect.assets;
+                if (choice.conditionalAssetCost && gameState.background.educationSupport) {
+                    actualAssetsChange = Math.floor(actualAssetsChange * 0.3);
+                }
+            }
+
+            const decisionHistory = {
+                stageName: currentEvent.ageGroup,
+                age: currentEvent.ageNum,
+                question: currentEvent.title,
+                chosenAnswer: choice.text,
+                feedback: choice.feedback,
+                effectSummary: {
+                    assets: actualAssetsChange,
+                    health: choice.effect ? (choice.effect.health || 0) : 0,
+                    happy: choice.effect ? (choice.effect.happy || 0) : 0,
+                    social: choice.effect ? (choice.effect.social || 0) : 0
+                }
+            };
+
+            if (choice.effect) {
+                if (choice.effect.insurance) gameState.hasInsurance = true;
+                if (choice.effect.married !== undefined) gameState.isMarried = choice.effect.married;
+                if (choice.effect.hasChildren !== undefined) gameState.hasChildren = choice.effect.hasChildren;
+                if (choice.effect.childInvested !== undefined) gameState.childInvested = choice.effect.childInvested;
+                if (choice.effect.exercise) gameState.exerciseCount += choice.effect.exercise;
+            }
+
+            if (choice.effect && choice.effect.diceTrigger) {
+                initDiceScreen(choice.effect.diceTrigger, decisionHistory);
+                return;
+            }
+
+            if (choice.effect && choice.effect.healthTrigger) {
+                handleHealthEvent(decisionHistory);
+                return;
+            }
+
+            applyStatsAndProceed(decisionHistory);
+        }
+
+        function handleHealthEvent(historyNode) {
+            let finalCost = -3500;
+            if (gameState.exerciseCount >= 2) finalCost = Math.floor(finalCost * 0.7);
+            else if (gameState.exerciseCount === 1) finalCost = Math.floor(finalCost * 0.9);
+
+            if (gameState.hasInsurance) finalCost = Math.floor(finalCost * 0.2);
+
+            historyNode.effectSummary.assets = finalCost;
+            historyNode.effectSummary.health = 30;
+            
+            let resultFeedback = `[의료 치료비 정산 결과] `;
+            if (gameState.hasInsurance) {
+                resultFeedback += `청년기에 미리 가입한 보험 덕분에 80% 의료비 면제 혜택을 받아 오직 ${Math.abs(finalCost)}만원만 소모되었습니다!`;
+            } else {
+                resultFeedback += `보험에 미가입되어 든든한 의료 안정을 누리지 못하고 생돈 ${Math.abs(finalCost)}만원이 고스란히 유출되었습니다.`;
+            }
+            historyNode.feedback = resultFeedback;
+            applyStatsAndProceed(historyNode);
+        }
+
+        function applyStatsAndProceed(historyNode) {
+            gameState.history.push(historyNode);
+            changeStats(historyNode.effectSummary);
+
+            elements.gameplayChoicesContainer.innerHTML = '';
+            elements.feedbackMessageBox.classList.remove('hidden');
+            
+            if (historyNode.effectSummary.assets < 0) {
+                elements.feedbackMessageBox.className = "p-4 rounded-2xl text-sm mb-4 bg-rose-50 border border-rose-200 flex gap-3 items-start";
+                elements.feedbackIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i>`;
+            } else {
+                elements.feedbackMessageBox.className = "p-4 rounded-2xl text-sm mb-4 bg-emerald-50 border border-emerald-200 flex gap-3 items-start";
+                elements.feedbackIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+            }
+            elements.feedbackText.innerHTML = `<strong>결과 안내:</strong> ${historyNode.feedback}`;
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = "w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl text-center mt-4";
+            nextBtn.innerHTML = `계속해서 다음 일생으로 이동 <i class="fa-solid fa-arrow-right"></i>`;
+            nextBtn.addEventListener('click', () => {
+                if (gameState.isMarried && gameState.hasChildren && !gameState.childType && gameState.currentEventIndex === 4) {
+                    const randChild = childTypes[Math.floor(Math.random() * childTypes.length)];
+                    gameState.childType = randChild;
+                    showChildEventMessage(randChild);
+                    return;
+                }
+                gameState.currentEventIndex++;
+                proceedToNextEvent();
+            });
+            elements.gameplayChoicesContainer.appendChild(nextBtn);
+        }
+
+        function showChildEventMessage(child) {
+            elements.gameplayEventTitle.innerText = "축하합니다! 소중한 자녀의 탄생";
+            elements.gameplayEventIcon.innerHTML = `<i class="fa-solid ${child.icon} text-amber-500"></i>`;
+            elements.gameplayEventDesc.innerHTML = `새로운 가족이 생겼습니다. 아기는 특별한 기질인 <strong>[${child.name}]</strong> 속성을 가지고 있습니다.<br><span class="text-xs text-slate-500 block mt-2">${child.desc}</span>`;
+            elements.feedbackMessageBox.classList.add('hidden');
+            elements.gameplayChoicesContainer.innerHTML = '';
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = "w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl text-center";
+            confirmBtn.innerHTML = `양육 딜레마 단계로 이동하기 <i class="fa-solid fa-child"></i>`;
+            confirmBtn.addEventListener('click', () => {
+                changeStats({ assets: -200, happy: child.happyBonus, social: 10, health: 0 });
+                gameState.currentEventIndex++;
+                proceedToNextEvent();
+            });
+            elements.gameplayChoicesContainer.appendChild(confirmBtn);
+        }
+
+        function initDiceScreen(diceKey, historyNode) {
+            const dEvent = diceEvents[diceKey];
+            gameState.diceEvent = { key: diceKey, meta: dEvent, historyNode: historyNode };
+
+            elements.diceEventTitle.innerText = dEvent.title;
+            elements.diceEventDesc.innerText = dEvent.desc;
+            elements.diceRulesList.innerHTML = '';
+            dEvent.rules.forEach(rule => {
+                const li = document.createElement('li');
+                li.innerHTML = rule;
+                elements.diceRulesList.appendChild(li);
+            });
+
+            elements.diceCube.className = "w-20 h-20 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-4xl font-black";
+            elements.diceCube.innerHTML = `<i class="fa-solid fa-dice"></i>`;
+            elements.btnRollDice.disabled = false;
+            elements.btnRollDice.innerHTML = `주사위 굴리기 <i class="fa-solid fa-dice-five ml-1"></i>`;
+            showScreen('dice');
+        }
+
+        function rollDiceTrigger() {
+            elements.btnRollDice.disabled = true;
+            elements.btnRollDice.innerText = "결과 정산 중...";
+            
+            let shakes = 0;
+            const diceIcons = ['fa-dice-one', 'fa-dice-two', 'fa-dice-three', 'fa-dice-four', 'fa-dice-five', 'fa-dice-six'];
+            const interval = setInterval(() => {
+                elements.diceCube.innerHTML = `<i class="fa-solid ${diceIcons[Math.floor(Math.random() * 6)]}"></i>`;
+                shakes++;
+                if (shakes > 10) {
+                    clearInterval(interval);
+                    determineDiceResult();
+                }
+            }, 80);
+        }
+
+        function determineDiceResult() {
+            const diceValue = Math.floor(Math.random() * 6) + 1;
+            const diceIconMap = { 1:'fa-dice-one', 2:'fa-dice-two', 3:'fa-dice-three', 4:'fa-dice-four', 5:'fa-dice-five', 6:'fa-dice-six' };
+
+            elements.diceCube.innerHTML = `<i class="fa-solid ${diceIconMap[diceValue]}"></i>`;
+            const resultMeta = gameState.diceEvent.meta.roll(diceValue);
+            
+            const hNode = gameState.diceEvent.historyNode;
+            hNode.chosenAnswer += ` (주사위 눈금: ${diceValue})`;
+            hNode.feedback = `[주사위 판정 결과] ${resultMeta.text}`;
+            hNode.effectSummary = resultMeta.stats;
+
+            changeStats(hNode.effectSummary);
+            gameState.history.push(hNode);
+
+            elements.diceEventDesc.innerHTML = `
+                <div class="bg-emerald-50 border border-emerald-200 text-slate-800 p-4 rounded-2xl text-sm leading-relaxed mt-4">
+                    <strong>${resultMeta.text}</strong>
+                </div>
+            `;
+
+            elements.btnRollDice.className = "w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl mt-4";
+            elements.btnRollDice.innerHTML = `결과 수용하고 진행하기 <i class="fa-solid fa-arrow-right"></i>`;
+            elements.btnRollDice.disabled = false;
+            elements.btnRollDice.onclick = function() {
+                elements.btnRollDice.onclick = function() { rollDiceTrigger(); };
+                gameState.currentEventIndex++;
+                proceedToNextEvent();
+            };
+        }
+
+        function renderFinalResults() {
+            elements.resultAssets.innerText = `${gameState.stats.assets.toLocaleString()} 만원`;
+            elements.resultHealth.innerText = `${gameState.stats.health}%`;
+            elements.resultHappy.innerText = `${gameState.stats.happy}%`;
+            elements.resultSocial.innerText = `${gameState.stats.social}%`;
+
+            const scoreDetail = evaluateLifeGoals();
+            elements.resultEvalText.innerHTML = scoreDetail.primaryFeedback;
+            elements.resultTargetMatching.innerHTML = scoreDetail.matchingRateList;
+
+            elements.resultTimeline.innerHTML = '';
+            gameState.history.forEach(item => {
+                const node = document.createElement('div');
+                node.className = 'relative pl-2';
+                node.innerHTML = `
+                    <div class="text-xs font-black text-indigo-600">${item.stageName} (${item.age}세)</div>
+                    <h5 class="text-sm font-extrabold text-slate-800 mt-0.5">${item.question}</h5>
+                    <p class="text-xs text-slate-600">학생의 선택: <span class="font-semibold text-slate-900">${item.chosenAnswer}</span></p>
+                    <p class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded border mt-1">${item.feedback}</p>
+                `;
+                elements.resultTimeline.appendChild(node);
+            });
+
+            generateAIPrompt(scoreDetail);
+            showScreen('result');
+        }
+
+        function evaluateLifeGoals() {
+            const topGoal = gameState.goals[0];
+            const secondGoal = gameState.goals[1];
+
+            const evalGoal = (goal) => {
+                if (!goal) return { rate: 0, text: '' };
+                let score = 0;
+                switch(goal.id) {
+                    case 'wealth': score = gameState.stats.assets >= 15000 ? 100 : (gameState.stats.assets >= 6000 ? 75 : 40); return { rate: score, text: `자산 기반` };
+                    case 'health': return { rate: gameState.stats.health, text: `신체 버팀 건강도` };
+                    case 'family': return { rate: Math.floor((gameState.stats.happy*0.6) + (gameState.isMarried?40:10)), text: `가정의 평화` };
+                    case 'fame': return { rate: gameState.stats.social, text: `직업 및 평판` };
+                    case 'freedom': return { rate: gameState.stats.happy, text: `여가 주체성` };
+                    case 'philanthropy': return { rate: Math.floor((gameState.stats.social*0.7) + 30), text: `사회 환원` };
+                }
+            };
+
+            const fRes = evalGoal(topGoal);
+            const sRes = evalGoal(secondGoal);
+            const avg = Math.floor((fRes.rate + sRes.rate) / 2);
+
+            let primaryFeedback = avg >= 75 ? `🎉 <strong>가치 성취 마스터 등극!</strong> 목표 균형 설계와 실전 리스크 헷징의 배분이 아주 우수했습니다.` : `⚖️ <strong>현실 타협과 균형 수호형 라이프!</strong> 예산 한계 속에서 적정선을 현명하게 지켜냈습니다.`;
+
+            let matchingRateList = `
+                <div class="space-y-1">
+                    <div class="font-bold text-slate-800 mb-1">우선순위 가치 달성 현황 (평균 성취지표 ${avg}%)</div>
+                    <div>1순위 [${topGoal.label}]: ${fRes.rate}% 달성</div>
+                    <div>2순위 [${secondGoal.label}]: ${sRes.rate}% 달성</div>
+                </div>
+            `;
+
+            return { averageAchievement: avg, primaryFeedback, matchingRateList, topGoal: topGoal.label, secondGoal: secondGoal.label, g1: fRes.rate, g2: sRes.rate };
+        }
+
+        function generateAIPrompt(scoreDetail) {
+            let choiceTextLog = "";
+            gameState.history.forEach(h => { choiceTextLog += `\n[${h.stageName} ${h.age}세] 선택: ${h.chosenAnswer} -> 결과: ${h.feedback}`; });
+
+            elements.aiPromptArea.value = `[중3 사회과 금융 교육 단원 수행평가 데이터 리포트]
+학생의 선택 데이터를 기반으로 모범 금융 교정 보고서를 도출해 주세요.
+
+■ 가치관 수립: 1순위 ${scoreDetail.topGoal}(${scoreDetail.g1}%), 2순위 ${scoreDetail.secondGoal}(${scoreDetail.g2}%)
+■ 최종 스탯: 자산 ${gameState.stats.assets}만원, 건강 ${gameState.stats.health}%, 행복 ${gameState.stats.happy}%, 관계 ${gameState.stats.social}%
+■ 가입 유무: 실손보험 소지(${gameState.hasInsurance}), 결혼 기혼 여부(${gameState.isMarried})
+■ 생애 발자취 기록: ${choiceTextLog}
+
+요청 조건: 성취기준 [9사(일사)08-02] 관점에서 자산 관리의 우수성과 리스크 관리 실패 요인을 교실용 격려 어조로 한 줄 등급과 함께 요약 평가해 주세요.`;
+        }
+
+        elements.btnStartGame.addEventListener('click', () => { initSetupScreen(); showScreen('setup'); });
+        elements.btnRollBackground.addEventListener('click', () => { rollBackground(); showToast("스탯 균형이 재무장되었습니다."); });
+        elements.btnSubmitSetup.addEventListener('click', () => { if (gameState.goals.length === 2) { buildEventSequence(); proceedToNextEvent(); } });
+        elements.btnRollDice.addEventListener('click', () => { if (!elements.btnRollDice.innerText.includes("진행")) rollDiceTrigger(); });
+        elements.btnCopyPrompt.addEventListener('click', () => { elements.aiPromptArea.select(); document.execCommand('copy'); showToast("프롬프트가 복사되었습니다!"); });
+        elements.btnRestart.addEventListener('click', () => { location.reload(); });
+        window.onload = function() { showScreen('intro'); };
+    </script>
+</body>
+</html>
